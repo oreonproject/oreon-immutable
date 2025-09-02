@@ -9,10 +9,7 @@ set -ouex pipefail
 # List of rpmfusion packages can be found here:
 # https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/39/x86_64/repoview/index.html&protocol=https&redirect=1
 
-# this installs a package from fedora repos
-dnf copr enable alciregi/distrobox
-
-dnf5 install -y tmux distrobox podman
+dnf5 install -y tmux distrobox podman distrobox @gnome-desktop
 
 # Use a COPR Example:
 #
