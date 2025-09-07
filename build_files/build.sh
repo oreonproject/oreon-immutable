@@ -2,22 +2,90 @@
 
 set -ouex pipefail
 
-### Install packages
 
-# Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/39/x86_64/repoview/index.html&protocol=https&redirect=1
+# Add repositories
+cat <<EOF > /etc/yum.repos.d/oreon.repo
+[devel]
+name=devel
+baseurl=https://raw.repo.almalinux.org/almalinux/10/devel/\$basearch/os/
+exclude=kpatch,kpatch-dnf,almalinux-release,anaconda,anaconda-gui,anaconda-core,anaconda-tui,anaconda-widgets,almalinux-indexhtml,almalinux-bookmarks,firefox
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10
 
-dnf5 install -y tmux distrobox podman distrobox @gnome-desktop
+[oreon]
+name=oreon
+baseurl=https://download.copr.fedorainfracloud.org/results/brandonlester/oreon-10/centos-stream-10-\$basearch/
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/brandonlester/oreon-10/pubkey.gpg
+repo_gpgcheck=0
 
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
+# [oreonoldrepo]
+# name=oreonoldrepo
+# baseurl=https://packages.boostyconnect.com/oreon-10/\$basearch/
+# gpgcheck=0
 
-#### Example for enabling a System Unit File
+# [oreonextras]
+# name=oreonextras
+# baseurl=https://packages.boostyconnect.com/oreon-10/extras-\$basearch/
+# gpgcheck=0
+
+[epel]
+name=epel
+baseurl=https://dl.fedoraproject.org/pub/epel/10/Everything/\$basearch/
+gpgcheck=1
+gpgkey=https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-10
+
+[base]
+name=base
+baseurl=https://repo.almalinux.org/almalinux/10/BaseOS/\$basearch/os/
+exclude=anaconda-live,kpatch,kpatch-dnf,almalinux-release,anaconda,anaconda-gui,anaconda-core,anaconda-tui,anaconda-widgets,almalinux-indexhtml,almalinux-bookmarks,firefox
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10
+
+
+[appstream]
+name=appstream
+baseurl=https://repo.almalinux.org/almalinux/10/AppStream/\$basearch/os/
+exclude=anaconda-live,kpatch,kpatch-dnf,almalinux-release,anaconda,anaconda-gui,anaconda-core,anaconda-tui,anaconda-widgets,almalinux-indexhtml,almalinux-bookmarks,firefox
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10
+
+[extras]
+name=extras
+baseurl=https://repo.almalinux.org/almalinux/10/extras/\$basearch/os/
+exclude=anaconda-live,kpatch,kpatch-dnf,almalinux-release,anaconda,anaconda-gui,anaconda-core,anaconda-tui,anaconda-widgets,almalinux-indexhtml,almalinux-bookmarks,firefox
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10
+
+[crb]
+name=crb
+baseurl=https://repo.almalinux.org/almalinux/10/CRB/\$basearch/os/
+exclude=anaconda-live,kpatch,kpatch-dnf,almalinux-release,anaconda,anaconda-gui,anaconda-core,anaconda-tui,anaconda-widgets,almalinux-indexhtml,almalinux-bookmarks,firefox
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-AlmaLinux-10
+
+[backports]
+name=backports
+baseurl=https://download.copr.fedorainfracloud.org/results/brandonlester/oreon-10-backports/centos-stream-9-\$basearch/
+gpgcheck=1
+gpgkey=https://download.copr.fedorainfracloud.org/results/brandonlester/oreon-10-backports/pubkey.gpg
+repo_gpgcheck=0
+EOF
+
+# Install packages (remove unwanted, install wanted)
+dnf remove -y setroubleshoot
+rpm -e --nodeps almalinux-release setup sudo almalinux-repos
+dnf install --releasever=10 -y oreon-repos oreon-logos oreon-release oreon-backgrounds \
+  gnome-shell-extension-dash-to-panel-oreon \
+  gnome-shell-extension-arc-menu-oreon \
+  gnome-shell-extension-blur-my-shell-oreon \
+  gnome-shell-extension-desktop-icons \
+  gnome-shell-oreon-theming \
+  oreon-shell-theme \
+  kernel-devel dracut-live python3-crypt-r memtest86+ \
+  anaconda anaconda-install-env-deps anaconda-live anaconda-webui \
+  livesys-scripts epel-release fuse xdg-utils atheros-firmware
+
+echo "Configuration complete."
 
 systemctl enable podman.socket
